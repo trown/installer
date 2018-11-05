@@ -2,6 +2,7 @@ package types
 
 import (
 	netopv1 "github.com/openshift/cluster-network-operator/pkg/apis/networkoperator/v1"
+	"github.com/gophercloud/utils/openstack/clientconfig"
 	"github.com/openshift/installer/pkg/ipnet"
 	"github.com/openshift/installer/pkg/types/aws"
 	"github.com/openshift/installer/pkg/types/libvirt"

@@ -12,6 +12,8 @@ import (
 	"github.com/pkg/errors"
 	survey "gopkg.in/AlecAivazis/survey.v1"
 
+	"github.com/gophercloud/utils/openstack/clientconfig"
+
 	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/rhcos"
 	"github.com/openshift/installer/pkg/types"
@@ -210,7 +212,8 @@ func (a *platform) openstackPlatform() (*openstack.Platform, error) {
 		return nil, err
 	}
 
-	cloud, err := asset.GenerateUserProvidedAsset(
+	var cloud *clientconfig.Cloud
+	cloudName, err := asset.GenerateUserProvidedAsset(
 		"OpenStack Cloud",
 		&survey.Question{
 			//TODO(russellb) - We could open clouds.yaml here and read the list of defined clouds
@@ -220,9 +223,10 @@ func (a *platform) openstackPlatform() (*openstack.Platform, error) {
 				Help:    "The OpenStack cloud name from clouds.yaml.",
 			},
 			Validate: survey.ComposeValidators(survey.Required, func(ans interface{}) error {
-				//value := ans.(string)
-				//FIXME(russellb) add some validation here
-				return nil
+				clientOpts := new(clientconfig.ClientOpts)
+				clientOpts.Cloud = ans.(string)
+				cloud, err = clientconfig.GetCloudFromYAML(clientOpts)
+				return err
 			}),
 		},
 		"OPENSHIFT_INSTALL_OPENSTACK_CLOUD",
@@ -254,6 +258,7 @@ func (a *platform) openstackPlatform() (*openstack.Platform, error) {
 		NetworkCIDRBlock: defaultVPCCIDR,
 		Region:           region,
 		BaseImage:        image,
+		CloudName:        cloudName,
 		Cloud:            cloud,
 		ExternalNetwork:  extNet,
 	}, nil

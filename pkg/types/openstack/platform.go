@@ -21,7 +21,10 @@ type Platform struct {
 
 	// Cloud
 	// Name of OpenStack cloud to use from clouds.yaml
-	Cloud string `json:"cloud"`
+	CloudName string `json:"cloudName"`
+
+	// Cloud config instance
+	Cloud *clientconfig.Cloud
 
 	// ExternalNetwork
 	// The OpenStack external network to be used for installation.
