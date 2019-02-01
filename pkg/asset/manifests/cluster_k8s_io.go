@@ -5,9 +5,9 @@ import (
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	machinev1a1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
 	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/asset/installconfig"
-	clusterv1a1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 )
 
 // This file was originally in pkg/assets/machines, but is now in
@@ -46,16 +46,16 @@ func (c *ClusterK8sIO) Generate(dependencies asset.Parents) error {
 		return errors.Wrapf(err, "Could not generate ClusterNetworkingConfig")
 	}
 
-	cluster := clusterv1a1.Cluster{
+	cluster := machinev1a1.Cluster{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "cluster.k8s.io/v1alpha1",
+			APIVersion: "machine.openshift.io/v1beta1",
 			Kind:       "Cluster",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      installconfig.Config.ObjectMeta.Name,
 			Namespace: "openshift-cluster-api",
 		},
-		Spec: clusterv1a1.ClusterSpec{
+		Spec: machinev1a1.ClusterSpec{
 			ClusterNetwork: *clusterNet,
 		},
 	}
