@@ -4,8 +4,7 @@ import (
 	"github.com/ghodss/yaml"
 	"github.com/pkg/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
-	machinev1a1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
+        clusterv1a1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/asset/installconfig"
 )
@@ -46,16 +45,16 @@ func (c *ClusterK8sIO) Generate(dependencies asset.Parents) error {
 		return errors.Wrapf(err, "Could not generate ClusterNetworkingConfig")
 	}
 
-	cluster := machinev1a1.Cluster{
+	cluster := clusterv1a1.Cluster{
 		TypeMeta: metav1.TypeMeta{
-			APIVersion: "machine.openshift.io/v1beta1",
+			APIVersion: "cluster.k8s.io/v1alpha1",
 			Kind:       "Cluster",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      installconfig.Config.ObjectMeta.Name,
 			Namespace: "openshift-cluster-api",
 		},
-		Spec: machinev1a1.ClusterSpec{
+		Spec: clusterv1a1.ClusterSpec{
 			ClusterNetwork: *clusterNet,
 		},
 	}

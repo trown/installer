@@ -11,8 +11,7 @@ import (
 	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/asset/installconfig"
 	"github.com/openshift/installer/pkg/asset/templates/content/openshift"
-
-	machinev1a1 "github.com/openshift/cluster-api/pkg/apis/machine/v1beta1"
+        clusterv1a1 "sigs.k8s.io/cluster-api/pkg/apis/cluster/v1alpha1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -121,7 +120,7 @@ func (no *Networking) Files() []*asset.File {
 // ClusterNetwork returns the ClusterNetworkingConfig for the ClusterConfig
 // object. This is called by ClusterK8sIO, which captures generalized cluster
 // state but shouldn't need to be fully networking aware.
-func (no *Networking) ClusterNetwork() (*machinev1a1.ClusterNetworkingConfig, error) {
+func (no *Networking) ClusterNetwork() (*clusterv1a1.ClusterNetworkingConfig, error) {
 	if no.Config == nil {
 		// should be unreachable.
 		return nil, errors.Errorf("ClusterNetwork called before initialization")
@@ -132,11 +131,11 @@ func (no *Networking) ClusterNetwork() (*machinev1a1.ClusterNetworkingConfig, er
 		pods = append(pods, cn.CIDR)
 	}
 
-	cn := &machinev1a1.ClusterNetworkingConfig{
-		Services: machinev1a1.NetworkRanges{
+	cn := &clusterv1a1.ClusterNetworkingConfig{
+		Services: clusterv1a1.NetworkRanges{
 			CIDRBlocks: no.Config.Spec.ServiceNetwork,
 		},
-		Pods: machinev1a1.NetworkRanges{
+		Pods: clusterv1a1.NetworkRanges{
 			CIDRBlocks: pods,
 		},
 	}
