@@ -268,16 +268,37 @@ data "ignition_config" "service_redirect" {
     "${data.ignition_user.core.id}",
   ]
 }
+resource "openstack_blockstorage_volume_v2" "service_vol" {
+  name     = "${var.cluster_id}-service-${count.index}"
+  size     = 20
+  image_id = "${data.openstack_images_image_v2.bootstrap_image.id}"
+
+  metadata {
+    Name = "${var.cluster_id}-service-vol"
+
+    openshiftClusterID = "${var.cluster_id}"
+  }
+}
+
+
+
 
 resource "openstack_compute_instance_v2" "load_balancer" {
   name      = "${var.cluster_id}-api"
   flavor_id = "${data.openstack_compute_flavor_v2.bootstrap_flavor.id}"
-  image_id  = "${data.openstack_images_image_v2.bootstrap_image.id}"
 
   user_data = "${data.ignition_config.service_redirect.rendered}"
 
   network {
     port = "${var.service_port_id}"
+  }
+
+  block_device {
+    uuid                  =  "${openstack_blockstorage_volume_v2.service_vol.id}"
+    source_type           = "volume"
+    boot_index            = 0
+    destination_type      = "volume"
+    delete_on_termination = true
   }
 
   metadata {

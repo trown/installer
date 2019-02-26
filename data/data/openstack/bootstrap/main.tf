@@ -49,15 +49,34 @@ data "openstack_compute_flavor_v2" "bootstrap_flavor" {
   name = "${var.flavor_name}"
 }
 
+resource "openstack_blockstorage_volume_v2" "bootstrap_volume" {
+  name     = "${var.cluster_id}-bootstrap"
+  size     = 20
+  image_id = "${data.openstack_images_image_v2.bootstrap_image.id}"
+  
+  metadata {
+    Name = "${var.cluster_id}-bootstrap-volume"
+  
+    openshiftClusterID = "${var.cluster_id}"
+  }
+}   
+  
 resource "openstack_compute_instance_v2" "bootstrap" {
   name      = "${var.cluster_id}-bootstrap"
   flavor_id = "${data.openstack_compute_flavor_v2.bootstrap_flavor.id}"
-  image_id  = "${data.openstack_images_image_v2.bootstrap_image.id}"
 
   user_data = "${data.ignition_config.redirect.rendered}"
 
   network {
     port = "${var.bootstrap_port_id}"
+  }
+
+  block_device {
+    uuid                  =  "${openstack_blockstorage_volume_v2.bootstrap_volume.id}"
+    source_type           = "volume"
+    boot_index            = 0
+    destination_type      = "volume"
+    delete_on_termination = true
   }
 
   metadata {
