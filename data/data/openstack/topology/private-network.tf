@@ -23,7 +23,7 @@ resource "openstack_networking_subnet_v2" "nodes" {
   ip_version      = 4
   network_id      = "${openstack_networking_network_v2.openshift-private.id}"
   tags            = ["openshiftClusterID=${var.cluster_id}"]
-  dns_nameservers = ["${openstack_networking_port_v2.service_port.all_fixed_ips[0]}"]
+  dns_nameservers = ["8.8.8.8"]
 }
 
 resource "openstack_networking_port_v2" "masters" {
