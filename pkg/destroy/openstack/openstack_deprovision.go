@@ -331,7 +331,7 @@ func deleteRouters(opts *clientconfig.ClientOpts, filter Filter, logger logrus.F
 	for _, router := range allRouters {
 		portListOpts := ports.ListOpts{
 			DeviceID:    router.ID,
-			DeviceOwner: "network:router_interface",
+			DeviceOwner: "network:ha_router_replicated_interface",
 		}
 		allPagesPort, err := ports.List(conn, portListOpts).AllPages()
 		if err != nil {
