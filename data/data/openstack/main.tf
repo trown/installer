@@ -22,35 +22,19 @@ provider "openstack" {
   user_name           = var.openstack_credentials_user_name
 }
 
-module "service" {
-  source = "./service"
-
-  swift_container   = openstack_objectstorage_container_v1.container.name
-  cluster_id        = var.cluster_id
-  cluster_domain    = var.cluster_domain
-  image_name        = var.openstack_base_image
-  flavor_name       = var.openstack_master_flavor_name
-  ignition          = var.ignition_bootstrap
-  lb_floating_ip    = var.openstack_lb_floating_ip
-  service_port_id   = module.topology.service_port_id
-  service_port_ip   = module.topology.service_port_ip
-  master_ips        = module.topology.master_ips
-  master_port_names = module.topology.master_port_names
-  bootstrap_ip      = module.topology.bootstrap_port_ip
-}
-
 module "bootstrap" {
   source = "./bootstrap"
 
-  swift_container     = openstack_objectstorage_container_v1.container.name
-  cluster_id          = var.cluster_id
-  cluster_domain      = var.cluster_domain
-  image_name          = var.openstack_base_image
-  flavor_name         = var.openstack_master_flavor_name
-  ignition            = var.ignition_bootstrap
-  bootstrap_port_id   = module.topology.bootstrap_port_id
-  service_vm_fixed_ip = module.topology.service_vm_fixed_ip
-  master_vm_fixed_ip  = module.topology.master_ips[0]
+  swift_container    = openstack_objectstorage_container_v1.container.name
+  cluster_id         = var.cluster_id
+  cluster_domain     = var.cluster_domain
+  image_name         = var.openstack_base_image
+  flavor_name        = var.openstack_master_flavor_name
+  ignition           = var.ignition_bootstrap
+  bootstrap_port_id  = module.topology.bootstrap_port_id
+  lb_floating_ip     = var.openstack_lb_floating_ip
+  master_vm_fixed_ip = module.topology.master_ips[0]
+  bootstrap_ip       = module.topology.bootstrap_port_ip
 }
 
 module "masters" {
@@ -65,12 +49,12 @@ module "masters" {
     var.openstack_master_extra_sg_ids,
     [module.topology.master_sg_id],
   )
-  master_port_ids     = module.topology.master_port_ids
-  user_data_ign       = var.ignition_master
-  service_vm_fixed_ip = module.topology.service_vm_fixed_ip
+  master_port_ids   = module.topology.master_port_ids
+  user_data_ign     = var.ignition_master
+  master_ips        = module.topology.master_ips
+  master_port_names = module.topology.master_port_names
+  bootstrap_ip      = module.topology.bootstrap_port_ip
 }
-
-# TODO(shadower) add a dns module here
 
 module "topology" {
   source = "./topology"

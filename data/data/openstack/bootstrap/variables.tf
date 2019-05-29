@@ -33,7 +33,11 @@ variable "bootstrap_port_id" {
   description = "The subnet ID for the bootstrap node."
 }
 
-variable "service_vm_fixed_ip" {
+variable "bootstrap_ip" {
+  type = string
+}
+
+variable "lb_floating_ip" {
   type = string
 }
 
