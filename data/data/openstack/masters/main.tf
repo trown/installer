@@ -21,19 +21,6 @@ EOF
   }
 }
 
-data "ignition_file" "hosts" {
-  filesystem = "root"
-  mode = "420" // 0644
-  path = "/etc/hosts"
-
-  content {
-    content = <<EOF
-${var.bootstrap_ip} api-int.${var.cluster_domain} api.${var.cluster_domain}
-EOF
-
-  }
-}
-
 data "ignition_config" "master_ignition_config" {
   count = var.instance_count
 
@@ -44,7 +31,6 @@ data "ignition_config" "master_ignition_config" {
   files = [
     element(data.ignition_file.hostname.*.id, count.index),
     data.ignition_file.haproxy_watcher_script.id,
-    data.ignition_file.hosts.id,
   ]
 
   systemd = [
@@ -129,15 +115,19 @@ update_cfg_and_restart() {
         systemctl restart haproxy
     fi
 }
+lb_port="7443"
+api_port="6443"
+rules=$(iptables -L PREROUTING -n -t nat --line-numbers | awk '/OCP_API_LB_REDIRECT/ {print $1}'  | tac)
+if [[ -z "$rules" ]]; then
+    iptables -t nat -I PREROUTING --src 0/0 --dst 0/0 -p tcp --dport "$api_port" -j REDIRECT --to-ports "$lb_port" -m comment --comment "OCP_API_LB_REDIRECT"
+fi
 if [[ $MASTERS -eq "" ]];
 then
 cat > /etc/haproxy/haproxy.cfg.new << EOF
 listen ${var.cluster_id}-api-masters
-    bind 0.0.0.0:6443
-    bind 0.0.0.0:22623
+    bind 0.0.0.0:7443
     mode tcp
     balance roundrobin
-    server bootstrap-22623 ${var.bootstrap_ip} check port 22623
     server bootstrap-6443 ${var.bootstrap_ip} check port 6443
     ${replace(join("\n    ", formatlist("server master-%s %s check port 6443", var.master_port_names, var.master_ips)), "master-port-", "")}
 EOF
@@ -156,8 +146,7 @@ do
 done
 cat > /etc/haproxy/haproxy.cfg.new << EOF
 listen ${var.cluster_id}-api-masters
-    bind 0.0.0.0:6443
-    bind 0.0.0.0:22623
+    bind 0.0.0.0:7443
     mode tcp
     balance roundrobin$MASTER_LINES
 listen ${var.cluster_id}-api-workers
