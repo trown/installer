@@ -35,6 +35,10 @@ variable "user_data_ign" {
   type = string
 }
 
+variable "lb_floating_ip" {
+  type = string
+}
+
 variable "master_ips" {
   type = list(string)
 }
