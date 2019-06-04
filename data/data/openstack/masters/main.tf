@@ -17,7 +17,22 @@ data "ignition_file" "hostname" {
     content = <<EOF
 master-${count.index}
 EOF
+  }
+}
 
+data "ignition_file" "clustervars" {
+  filesystem = "root"
+  mode       = "420" // 0644
+  path       = "/tmp/clustervars"
+
+  content {
+    content = <<EOF
+export FLOATING_IP=${var.lb_floating_ip}
+export BOOTSTRAP_IP=${var.bootstrap_ip}
+export MASTER_FIXED_IPS_0=${var.master_ips[0]}
+export MASTER_FIXED_IPS_1=${var.master_ips[1]}
+export MASTER_FIXED_IPS_2=${var.master_ips[2]}
+EOF
   }
 }
 
@@ -31,6 +46,7 @@ data "ignition_config" "master_ignition_config" {
   files = [
     element(data.ignition_file.hostname.*.id, count.index),
     data.ignition_file.haproxy_watcher_script.id,
+    data.ignition_file.clustervars.id,
   ]
 
   systemd = [
