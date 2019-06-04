@@ -145,7 +145,6 @@ listen ${var.cluster_id}-api-masters
     mode tcp
     balance roundrobin
     server bootstrap-6443 ${var.bootstrap_ip} check port 6443
-    ${replace(join("\n    ", formatlist("server master-%s %s check port 6443", var.master_port_names, var.master_ips)), "master-port-", "")}
 EOF
     update_cfg_and_restart
     exit 0
