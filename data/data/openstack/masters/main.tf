@@ -124,7 +124,7 @@ MASTERS=$(oc get nodes -l node-role.kubernetes.io/master -ogo-template="$TEMPLAT
 WORKERS=$(oc get nodes -l node-role.kubernetes.io/worker -ogo-template="$TEMPLATE")
 update_cfg_and_restart() {
     CHANGED=$(diff /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.new)
-    if [[ ! -f /etc/haproxy/haproxy.cfg ]] || [[ ! $CHANGED -eq "" ]];
+    if [[ ! -f /etc/haproxy/haproxy.cfg ]] || [[ ! -z "$CHANGED" ]];
     then
         cp /etc/haproxy/haproxy.cfg /etc/haproxy/haproxy.cfg.backup || true
         cp /etc/haproxy/haproxy.cfg.new /etc/haproxy/haproxy.cfg
@@ -137,7 +137,7 @@ rules=$(iptables -L PREROUTING -n -t nat --line-numbers | awk '/OCP_API_LB_REDIR
 if [[ -z "$rules" ]]; then
     iptables -t nat -I PREROUTING --src 0/0 --dst 0/0 -p tcp --dport "$api_port" -j REDIRECT --to-ports "$lb_port" -m comment --comment "OCP_API_LB_REDIRECT"
 fi
-if [[ $MASTERS -eq "" ]];
+if [[ -z "$MASTERS" ]];
 then
 cat > /etc/haproxy/haproxy.cfg.new << EOF
 listen ${var.cluster_id}-api-masters
