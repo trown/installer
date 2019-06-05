@@ -23,7 +23,7 @@ EOF
 data "ignition_file" "clustervars" {
   filesystem = "root"
   mode       = "420" // 0644
-  path       = "/tmp/clustervars"
+  path       = "/etc/kubernetes/static-pod-resources/clustervars"
 
   content {
     content = <<EOF
