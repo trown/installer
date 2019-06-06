@@ -135,7 +135,7 @@ lb_port="7443"
 api_port="6443"
 rules=$(iptables -L PREROUTING -n -t nat --line-numbers | awk '/OCP_API_LB_REDIRECT/ {print $1}'  | tac)
 if [[ -z "$rules" ]]; then
-    iptables -t nat -I PREROUTING --src 0/0 --dst 0/0 -p tcp --dport "$api_port" -j REDIRECT --to-ports "$lb_port" -m comment --comment "OCP_API_LB_REDIRECT"
+    iptables -t nat -I PREROUTING ! --src 172.30.0.0/16 --dst 0/0 -p tcp --dport "$api_port" -j REDIRECT --to-ports "$lb_port" -m comment --comment "OCP_API_LB_REDIRECT"
 fi
 if [[ -z "$MASTERS" ]];
 then
