@@ -9,7 +9,7 @@ resource "openstack_networking_secgroup_rule_v2" "master_mcs" {
   protocol          = "tcp"
   port_range_min    = 22623
   port_range_max    = 22623
-  remote_ip_prefix  = var.cidr_block
+  remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.master.id
 }
 
@@ -19,7 +19,7 @@ resource "openstack_networking_secgroup_rule_v2" "master_ingress_icmp" {
   protocol          = "icmp"
   port_range_min    = 0
   port_range_max    = 0
-  remote_ip_prefix  = var.cidr_block
+  remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.master.id
 }
 
@@ -39,7 +39,7 @@ resource "openstack_networking_secgroup_rule_v2" "master_ingress_dns_tcp" {
   protocol          = "tcp"
   port_range_min    = 53
   port_range_max    = 53
-  remote_ip_prefix  = "${var.cidr_block}"
+  remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = "${openstack_networking_secgroup_v2.master.id}"
 }
 
@@ -49,7 +49,7 @@ resource "openstack_networking_secgroup_rule_v2" "master_ingress_dns_udp" {
   protocol          = "udp"
   port_range_min    = 53
   port_range_max    = 53
-  remote_ip_prefix  = "${var.cidr_block}"
+  remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = "${openstack_networking_secgroup_v2.master.id}"
 }
 
@@ -69,7 +69,7 @@ resource "openstack_networking_secgroup_rule_v2" "master_ingress_http" {
   protocol          = "tcp"
   port_range_min    = 80
   port_range_max    = 80
-  remote_ip_prefix  = var.cidr_block
+  remote_ip_prefix  = "0.0.0.0/0"
   security_group_id = openstack_networking_secgroup_v2.master.id
 }
 
