@@ -240,7 +240,7 @@ variable "openstack_extra_tags" {
   default = {}
 
   description = <<EOF
-(optional) Extra AWS tags to be applied to created resources.
+(optional) Extra tags to be applied to created resources.
 
 Example: `{ "key" = "value", "foo" = "bar" }`
 EOF
@@ -286,5 +286,10 @@ variable "openstack_trunk_support" {
 Contains 0 if the OpenStack Neutron trunk extension is disabled and 1 if it is enabled.
 EOF
 
+}
+
+variable "bootstrap_dns" {
+  default     = true
+  description = "Whether to include DNS entries for the bootstrap node or not."
 }
 

@@ -3,6 +3,7 @@ package tls
 import (
 	"crypto/x509"
 	"crypto/x509/pkix"
+	"net"
 
 	"github.com/openshift/installer/pkg/asset"
 	"github.com/openshift/installer/pkg/asset/installconfig"
@@ -35,9 +36,10 @@ func (a *MCSCertKey) Generate(dependencies asset.Parents) error {
 
 	cfg := &CertCfg{
 		Subject:      pkix.Name{CommonName: hostname},
+		IPAddresses:  []net.IP{net.ParseIP(installConfig.Config.OpenStack.LbFloatingIP)},
 		ExtKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		Validity:     ValidityTenYears,
-		DNSNames:     []string{hostname},
+		DNSNames:     []string{hostname, installConfig.Config.OpenStack.LbFloatingIP},
 	}
 
 	return a.SignedCertKey.Generate(cfg, ca, "machine-config-server", DoNotAppendParent)

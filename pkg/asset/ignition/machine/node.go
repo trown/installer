@@ -12,6 +12,7 @@ import (
 
 // pointerIgnitionConfig generates a config which references the remote config
 // served by the machine config server.
+// FIXME(mandre) the source should point to api-int in the general case
 func pointerIgnitionConfig(installConfig *types.InstallConfig, rootCA []byte, role string) *ignition.Config {
 	return &ignition.Config{
 		Ignition: ignition.Ignition{
@@ -21,7 +22,7 @@ func pointerIgnitionConfig(installConfig *types.InstallConfig, rootCA []byte, ro
 					Source: func() *url.URL {
 						return &url.URL{
 							Scheme: "https",
-							Host:   fmt.Sprintf("api-int.%s:22623", installConfig.ClusterDomain()),
+							Host:   fmt.Sprintf("%s:22623", installConfig.OpenStack.LbFloatingIP),
 							Path:   fmt.Sprintf("/config/%s", role),
 						}
 					}().String(),

@@ -138,11 +138,26 @@ func Platform() (*openstack.Platform, error) {
 		trunkSupport = "1"
 	}
 
+	var lbFloatingIP string
+	err = survey.Ask([]*survey.Question{
+		{
+			Prompt: &survey.Select{
+				Message: "LbFloatingIP",
+				Help:    "A floating IP for the API.",
+			},
+			Validate: survey.ComposeValidators(survey.Required),
+		},
+	}, &lbFloatingIP)
+	if err != nil {
+		return nil, err
+	}
+
 	return &openstack.Platform{
 		Region:          region,
 		Cloud:           cloud,
 		ExternalNetwork: extNet,
 		FlavorName:      flavor,
 		TrunkSupport:    trunkSupport,
+		LbFloatingIP:    lbFloatingIP,
 	}, nil
 }
