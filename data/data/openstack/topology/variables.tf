@@ -33,7 +33,16 @@ variable "masters_count" {
   type = string
 }
 
+/* variable "workers_count" { */
+/*   type = string */
+/* } */
+
 variable "trunk_support" {
   type = string
+}
+
+variable "bootstrap_dns" {
+  default     = true
+  description = "Whether to include DNS entries for the bootstrap node or not."
 }
 

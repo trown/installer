@@ -1,6 +1,8 @@
 locals {
-  nodes_cidr_block     = cidrsubnet(var.cidr_block, 1, 0)
-  bootstrap_cidr_block = cidrsubnet(var.cidr_block, 1, 1)
+  # masters_cidr_block   = cidrsubnet(var.cidr_block, 2, 0)
+  # workers_cidr_block   = cidrsubnet(var.cidr_block, 2, 1)
+  # bootstrap_cidr_block = cidrsubnet(var.cidr_block, 2, 2)
+  nodes_cidr_block = var.cidr_block
 }
 
 
@@ -19,13 +21,26 @@ resource "openstack_networking_network_v2" "openshift-private" {
   tags           = ["openshiftClusterID=${var.cluster_id}"]
 }
 
-resource "openstack_networking_subnet_v2" "bootstrap" {
-  name       = "${var.cluster_id}-bootstrap"
-  cidr       = local.bootstrap_cidr_block
-  ip_version = 4
-  network_id = openstack_networking_network_v2.openshift-private.id
-  tags       = ["openshiftClusterID=${var.cluster_id}"]
-}
+# resource "openstack_networking_subnet_v2" "bootstrap" {
+#   name       = "${var.cluster_id}-bootstrap"
+#   cidr       = local.bootstrap_cidr_block
+#   ip_version = 4
+#   network_id = openstack_networking_network_v2.openshift-private.id
+#   tags       = ["openshiftClusterID=${var.cluster_id}"]
+# }
+
+# NOTE(mandre) This subnet only serves for the masters created when the initial
+# cluster is brought up. Subsequent masters will be placed by MCO on the nodes
+# subnet
+# resource "openstack_networking_subnet_v2" "masters" {
+#   name            = "${var.cluster_id}-masters"
+#   cidr            = local.initial_masters_cidr_block
+#   ip_version      = 4
+#   network_id      = openstack_networking_network_v2.openshift-private.id
+#   tags            = ["openshiftClusterID=${var.cluster_id}"]
+#   # dns_nameservers = var.bootstrap_dns ? [openstack_networking_port_v2.bootstrap_port.all_fixed_ips[0]] : []
+#   dns_nameservers = [openstack_networking_port_v2.bootstrap_port.all_fixed_ips[0]]
+# }
 
 resource "openstack_networking_subnet_v2" "nodes" {
   name            = "${var.cluster_id}-nodes"
@@ -33,7 +48,10 @@ resource "openstack_networking_subnet_v2" "nodes" {
   ip_version      = 4
   network_id      = openstack_networking_network_v2.openshift-private.id
   tags            = ["openshiftClusterID=${var.cluster_id}"]
-  dns_nameservers = [openstack_networking_port_v2.bootstrap_port.all_fixed_ips[0]]
+  # FIXME(mandre) This only takes into account the initial master nodes and not
+  # the ones that came after the initial deployment
+  # dns_nameservers = flatten(openstack_networking_port_v2.masters.*.all_fixed_ips)
+  # NOTE(mandre) Make DNS setting via Ignition
 }
 
 resource "openstack_networking_port_v2" "masters" {
@@ -77,13 +95,13 @@ resource "openstack_networking_port_v2" "bootstrap_port" {
   }
 
   fixed_ip {
-    subnet_id = openstack_networking_subnet_v2.bootstrap.id
+    subnet_id = openstack_networking_subnet_v2.nodes.id
   }
 }
 
-resource "openstack_networking_floatingip_associate_v2" "bootstrap_fip" {
+resource "openstack_networking_floatingip_associate_v2" "api_fip" {
   count       = length(var.lb_floating_ip) == 0 ? 0 : 1
-  port_id     = openstack_networking_port_v2.masters[0].id
+  port_id     = var.bootstrap_dns ? openstack_networking_port_v2.bootstrap_port.id : openstack_networking_port_v2.masters[0].id
   floating_ip = var.lb_floating_ip
 }
 
@@ -92,11 +110,6 @@ resource "openstack_networking_router_v2" "openshift-external-router" {
   admin_state_up      = true
   external_network_id = data.openstack_networking_network_v2.external_network.id
   tags                = ["openshiftClusterID=${var.cluster_id}"]
-}
-
-resource "openstack_networking_router_interface_v2" "bootstrap_router_interface" {
-  router_id = openstack_networking_router_v2.openshift-external-router.id
-  subnet_id = openstack_networking_subnet_v2.bootstrap.id
 }
 
 resource "openstack_networking_router_interface_v2" "nodes_router_interface" {

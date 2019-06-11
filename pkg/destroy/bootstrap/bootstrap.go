@@ -11,6 +11,7 @@ import (
 	"github.com/openshift/installer/pkg/asset/cluster"
 	"github.com/openshift/installer/pkg/terraform"
 	"github.com/openshift/installer/pkg/types/libvirt"
+	"github.com/openshift/installer/pkg/types/openstack"
 	"github.com/pkg/errors"
 )
 
@@ -29,7 +30,7 @@ func Destroy(dir string) (err error) {
 	tfPlatformVarsFileName := fmt.Sprintf(cluster.TfPlatformVarsFileName, platform)
 	copyNames := []string{terraform.StateFileName, cluster.TfVarsFileName, tfPlatformVarsFileName}
 
-	if platform == libvirt.Name {
+	if platform == libvirt.Name || platform == openstack.Name {
 		err = ioutil.WriteFile(filepath.Join(dir, "disable-bootstrap.tfvars.json"), []byte(`{
   "bootstrap_dns": false
 }
@@ -62,7 +63,7 @@ func Destroy(dir string) (err error) {
 		}
 	}
 
-	if platform == libvirt.Name {
+	if platform == libvirt.Name || platform == openstack.Name {
 		_, err = terraform.Apply(tempDir, platform, extraArgs...)
 		if err != nil {
 			return errors.Wrap(err, "Terraform apply")

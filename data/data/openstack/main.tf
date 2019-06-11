@@ -65,8 +65,10 @@ module "topology" {
   external_network    = var.openstack_external_network
   external_network_id = var.openstack_external_network_id
   masters_count       = var.master_count
+  # workers_count       = var.worker_count
   lb_floating_ip      = var.openstack_lb_floating_ip
   trunk_support       = var.openstack_trunk_support
+  bootstrap_dns       = var.bootstrap_dns
 }
 
 resource "openstack_objectstorage_container_v1" "container" {
@@ -75,9 +77,11 @@ resource "openstack_objectstorage_container_v1" "container" {
   # "kubernetes.io/cluster/${var.cluster_id}" = "owned"
   metadata = merge(
     {
-      "Name"               = "${var.cluster_id}-ignition-master"
+      "Name"               = "${var.cluster_id}-ignition"
       "openshiftClusterID" = var.cluster_id
     },
+    # FIXME(mandre) the openstack_extra_tags should be applied to all resources
+    # created
     var.openstack_extra_tags,
   )
 }

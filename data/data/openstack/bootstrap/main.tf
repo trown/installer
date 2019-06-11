@@ -20,14 +20,8 @@ data "ignition_config" "redirect" {
     data.ignition_file.hostname.id,
     data.ignition_file.dns_conf.id,
     data.ignition_file.dhcp_conf.id,
-    data.ignition_file.corefile.id,
-    data.ignition_file.coredb.id,
     data.ignition_file.hosts.id,
 
-  ]
-
-  systemd = [
-    data.ignition_systemd_unit.local_dns.id,
   ]
 }
 
@@ -65,75 +59,11 @@ data "ignition_file" "hosts" {
 
   content {
     content = <<EOF
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
 ${var.bootstrap_ip} api-int.${var.cluster_domain} api.${var.cluster_domain}
 EOF
   }
-}
-
-data "ignition_file" "corefile" {
-  filesystem = "root"
-  mode = "420" // 0644
-  path = "/etc/coredns/Corefile"
-
-  content {
-    content = <<EOF
-. {
-    log
-    errors
-    reload 10s
-    forward . /etc/resolv.conf {
-    }
-}
-${var.cluster_domain} {
-    log
-    errors
-    reload 10s
-    file /etc/coredns/db.${var.cluster_domain} {
-        upstream /etc/resolv.conf
-    }
-}
-EOF
-
-  }
-}
-
-data "ignition_file" "coredb" {
-  filesystem = "root"
-  mode       = "420" // 0644
-  path       = "/etc/coredns/db.${var.cluster_domain}"
-
-  content {
-    content = <<EOF
-$ORIGIN ${var.cluster_domain}.
-@    3600 IN SOA host.${var.cluster_domain}. hostmaster (
-                                2017042752 ; serial
-                                7200       ; refresh (2 hours)
-                                3600       ; retry (1 hour)
-                                1209600    ; expire (2 weeks)
-                                3600       ; minimum (1 hour)
-                                )
-api  IN  A  ${var.lb_floating_ip}
-api-int  IN  A  ${var.bootstrap_ip}
-bootstrap.${var.cluster_domain}  IN  A  ${var.bootstrap_ip}
-EOF
-
-  }
-}
-
-data "ignition_systemd_unit" "local_dns" {
-  name = "local-dns.service"
-
-  content = <<EOF
-[Unit]
-Description=Internal DNS serving the required OpenShift records
-[Service]
-ExecStart=/bin/podman run --rm -i -t -m 128m --net host --cap-add=NET_ADMIN -v /etc/coredns:/etc/coredns:Z openshift/origin-coredns:v4.0 -conf /etc/coredns/Corefile
-Restart=always
-RestartSec=10
-[Install]
-WantedBy=multi-user.target
-EOF
-
 }
 
 data "ignition_file" "hostname" {
