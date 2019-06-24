@@ -52,7 +52,6 @@ module "masters" {
   master_port_ids   = module.topology.master_port_ids
   user_data_ign     = var.ignition_master
   master_ips        = module.topology.master_ips
-  master_port_names = module.topology.master_port_names
   bootstrap_ip      = module.topology.bootstrap_port_ip
   lb_floating_ip     = var.openstack_lb_floating_ip
 }

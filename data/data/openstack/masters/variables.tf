@@ -43,10 +43,6 @@ variable "master_ips" {
   type = list(string)
 }
 
-variable "master_port_names" {
-  type = list(string)
-}
-
 variable "bootstrap_ip" {
   type = string
 }

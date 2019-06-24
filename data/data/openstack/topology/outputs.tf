@@ -10,10 +10,6 @@ output "master_ips" {
   value = flatten(openstack_networking_port_v2.masters.*.all_fixed_ips)
 }
 
-output "master_port_names" {
-  value = openstack_networking_port_v2.masters.*.name
-}
-
 output "master_sg_id" {
   value = openstack_networking_secgroup_v2.master.id
 }
