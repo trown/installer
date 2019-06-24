@@ -62,6 +62,7 @@ module "topology" {
 
   cidr_block          = var.machine_cidr
   cluster_id          = var.cluster_id
+  cluster_domain      = var.cluster_domain
   external_network    = var.openstack_external_network
   external_network_id = var.openstack_external_network_id
   masters_count       = var.master_count

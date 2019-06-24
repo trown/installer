@@ -13,6 +13,9 @@ data "openstack_networking_network_v2" "external_network" {
 resource "openstack_networking_network_v2" "openshift-private" {
   name           = "${var.cluster_id}-openshift"
   admin_state_up = "true"
+  # NOTE(mandre) after updating the openstack terraform provider to v1.17.0 or
+  # above we should be able to configure the neutron dhcp server this way
+  # dns_domain     = var.cluster_domain
   tags           = ["openshiftClusterID=${var.cluster_id}"]
 }
 
@@ -42,6 +45,11 @@ resource "openstack_networking_port_v2" "masters" {
   security_group_ids = [openstack_networking_secgroup_v2.master.id]
   tags               = ["openshiftClusterID=${var.cluster_id}"]
 
+  extra_dhcp_option {
+    name = "domain-search"
+    value = var.cluster_domain
+  }
+
   fixed_ip {
     subnet_id = openstack_networking_subnet_v2.nodes.id
   }
@@ -63,6 +71,10 @@ resource "openstack_networking_port_v2" "bootstrap_port" {
   network_id         = openstack_networking_network_v2.openshift-private.id
   security_group_ids = [openstack_networking_secgroup_v2.master.id]
   tags               = ["openshiftClusterID=${var.cluster_id}"]
+  extra_dhcp_option {
+    name = "domain-search"
+    value = var.cluster_domain
+  }
 
   fixed_ip {
     subnet_id = openstack_networking_subnet_v2.bootstrap.id
