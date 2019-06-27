@@ -33,10 +33,6 @@ variable "masters_count" {
   type = string
 }
 
-/* variable "workers_count" { */
-/*   type = string */
-/* } */
-
 variable "trunk_support" {
   type = string
 }

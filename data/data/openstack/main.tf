@@ -65,7 +65,6 @@ module "topology" {
   external_network    = var.openstack_external_network
   external_network_id = var.openstack_external_network_id
   masters_count       = var.master_count
-  # workers_count       = var.worker_count
   lb_floating_ip      = var.openstack_lb_floating_ip
   trunk_support       = var.openstack_trunk_support
   bootstrap_dns       = var.bootstrap_dns
