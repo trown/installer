@@ -20,8 +20,6 @@ data "ignition_config" "redirect" {
     data.ignition_file.hostname.id,
     data.ignition_file.dns_conf.id,
     data.ignition_file.dhcp_conf.id,
-    data.ignition_file.hosts.id,
-
   ]
 }
 
@@ -49,20 +47,6 @@ send dhcp-client-identifier = hardware;
 prepend domain-name-servers ${var.master_vm_fixed_ip};
 EOF
 
-  }
-}
-
-data "ignition_file" "hosts" {
-  filesystem = "root"
-  mode       = "420" // 0644
-  path       = "/etc/hosts"
-
-  content {
-    content = <<EOF
-127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
-::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
-${var.bootstrap_ip} api-int.${var.cluster_domain} api.${var.cluster_domain}
-EOF
   }
 }
 
