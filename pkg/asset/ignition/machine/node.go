@@ -10,9 +10,18 @@ import (
 	"github.com/openshift/installer/pkg/types"
 )
 
+func ignitionURL(installConfig *types.InstallConfig) string {
+	switch {
+	case installConfig.OpenStack != nil:
+		// FIXME(mandre) this should point to a VIP on the api-int network
+		return fmt.Sprintf("%s:22623", installConfig.OpenStack.LbFloatingIP)
+	default:
+		return fmt.Sprintf("api-int.%s:22623", installConfig.ClusterDomain())
+	}
+}
+
 // pointerIgnitionConfig generates a config which references the remote config
 // served by the machine config server.
-// FIXME(mandre) the source should point to api-int in the general case
 func pointerIgnitionConfig(installConfig *types.InstallConfig, rootCA []byte, role string) *ignition.Config {
 	return &ignition.Config{
 		Ignition: ignition.Ignition{
@@ -22,7 +31,7 @@ func pointerIgnitionConfig(installConfig *types.InstallConfig, rootCA []byte, ro
 					Source: func() *url.URL {
 						return &url.URL{
 							Scheme: "https",
-							Host:   fmt.Sprintf("%s:22623", installConfig.OpenStack.LbFloatingIP),
+							Host:   ignitionURL(installConfig),
 							Path:   fmt.Sprintf("/config/%s", role),
 						}
 					}().String(),

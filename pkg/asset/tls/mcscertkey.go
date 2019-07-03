@@ -36,10 +36,14 @@ func (a *MCSCertKey) Generate(dependencies asset.Parents) error {
 
 	cfg := &CertCfg{
 		Subject:      pkix.Name{CommonName: hostname},
-		IPAddresses:  []net.IP{net.ParseIP(installConfig.Config.OpenStack.LbFloatingIP)},
 		ExtKeyUsages: []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
 		Validity:     ValidityTenYears,
-		DNSNames:     []string{hostname, installConfig.Config.OpenStack.LbFloatingIP},
+		DNSNames:     []string{hostname},
+	}
+
+	if installConfig.Config.OpenStack != nil {
+		cfg.IPAddresses = []net.IP{net.ParseIP(installConfig.Config.OpenStack.LbFloatingIP)}
+		cfg.DNSNames = []string{hostname, installConfig.Config.OpenStack.LbFloatingIP}
 	}
 
 	return a.SignedCertKey.Generate(cfg, ca, "machine-config-server", DoNotAppendParent)
