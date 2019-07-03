@@ -20,6 +20,11 @@ data "ignition_config" "redirect" {
     data.ignition_file.hostname.id,
     data.ignition_file.dns_conf.id,
     data.ignition_file.dhcp_conf.id,
+    data.ignition_file.switch_api_endpoint.id,
+  ]
+
+  systemd = [
+    data.ignition_systemd_unit.switch_api_endpoint.id,
   ]
 }
 
@@ -62,6 +67,58 @@ EOF
 
   }
 }
+
+data "ignition_file" "switch_api_endpoint" {
+  filesystem = "root"
+  mode       = "493" // 0755
+  path       = "/usr/local/bin/switch-api-endpoint.sh"
+
+  content {
+    content = <<EOF
+#!/usr/bin/env bash
+
+set -eu
+
+wait_for_existence() {
+	while [ ! -e "$${1}" ]
+	do
+		sleep 5
+	done
+}
+
+echo "Waiting for bootstrap to complete..."
+wait_for_existence /opt/openshift/.bootkube.done
+wait_for_existence /opt/openshift/.openshift.done
+
+echo "Switching bootstrap's API address to a master node"
+echo "${var.master_vm_fixed_ip} api-int.${var.cluster_domain} api.${var.cluster_domain}" >> /etc/hosts
+EOF
+
+  }
+}
+
+data "ignition_systemd_unit" "switch_api_endpoint" {
+  name    = "switch-api-endpoint.service"
+  enabled = true
+
+  content = <<EOF
+[Unit]
+Description=Switch the bootstrap API to a master node. This will enable `progress.service` to send the boostrap-complete event.
+# Workaround for https://github.com/systemd/systemd/issues/1312
+Wants=bootkube.service openshift.service
+After=bootkube.service openshift.service
+
+[Service]
+ExecStart=/usr/local/bin/switch-api-endpoint.sh
+
+Restart=on-failure
+RestartSec=5s
+
+[Install]
+WantedBy=multi-user.target
+EOF
+}
+
 
 data "openstack_images_image_v2" "bootstrap_image" {
   name = var.image_name
