@@ -13,8 +13,8 @@ import (
 func ignitionURL(installConfig *types.InstallConfig) string {
 	switch {
 	case installConfig.OpenStack != nil:
-		// FIXME(mandre) this should point to a VIP on the api-int network
-		return fmt.Sprintf("%s:22623", installConfig.OpenStack.LbFloatingIP)
+		ip_address := "10.0.128.5"
+		return fmt.Sprintf("%s:22623", ip_address)
 	default:
 		return fmt.Sprintf("api-int.%s:22623", installConfig.ClusterDomain())
 	}

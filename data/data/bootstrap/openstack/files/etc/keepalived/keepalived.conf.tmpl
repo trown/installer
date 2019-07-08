@@ -1,0 +1,14 @@
+vrrp_instance ${CLUSTER_NAME}_API {
+    state BACKUP
+    interface ${INTERFACE}
+    virtual_router_id ${API_VRID}
+    priority 50
+    advert_int 1
+    authentication {
+        auth_type PASS
+        auth_pass ${CLUSTER_NAME}_api_vip
+    }
+    virtual_ipaddress {
+        ${API_VIP}/${NET_MASK}
+    }
+}

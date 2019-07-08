@@ -132,6 +132,28 @@ func (a *Bootstrap) Generate(dependencies asset.Parents) error {
 	if err != nil {
 		return err
 	}
+
+	// Check for optional platform specific files/units
+	platform := installConfig.Config.Platform.Name()
+	platformFilePath := fmt.Sprintf("bootstrap/%s/files", platform)
+	directory, err := data.Assets.Open(platformFilePath)
+	if directory != nil {
+		directory.Close()
+		err = a.addStorageFiles("/", platformFilePath, templateData)
+		if err != nil {
+			return err
+		}
+	}
+	platformUnitPath := fmt.Sprintf("bootstrap/%s/systemd/units", platform)
+	directory, err = data.Assets.Open(platformUnitPath)
+	if directory != nil {
+		directory.Close()
+		err = a.addSystemdUnits(platformUnitPath, templateData)
+		if err != nil {
+			return err
+		}
+	}
+
 	a.addParentFiles(dependencies)
 
 	a.Config.Passwd.Users = append(
@@ -256,6 +278,7 @@ func (a *Bootstrap) addSystemdUnits(uri string, templateData *bootstrapTemplateD
 		"chown-gatewayd-key.service":      {},
 		"systemd-journal-gatewayd.socket": {},
 		"approve-csr.service":             {},
+		"keepalived.service":              {},
 	}
 
 	directory, err := data.Assets.Open(uri)

@@ -42,8 +42,10 @@ func (a *MCSCertKey) Generate(dependencies asset.Parents) error {
 	}
 
 	if installConfig.Config.OpenStack != nil {
-		cfg.IPAddresses = []net.IP{net.ParseIP(installConfig.Config.OpenStack.LbFloatingIP)}
-		cfg.DNSNames = []string{hostname, installConfig.Config.OpenStack.LbFloatingIP}
+		// FIXME(mandre) get that from Config somehow
+		ip_address := "10.0.128.5"
+		cfg.IPAddresses = []net.IP{net.ParseIP(ip_address)}
+		cfg.DNSNames = append(cfg.DNSNames, ip_address)
 	}
 
 	return a.SignedCertKey.Generate(cfg, ca, "machine-config-server", DoNotAppendParent)

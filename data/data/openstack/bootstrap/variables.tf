@@ -33,15 +33,6 @@ variable "bootstrap_port_id" {
   description = "The subnet ID for the bootstrap node."
 }
 
-variable "bootstrap_ip" {
+variable "api_vip" {
   type = string
-}
-
-variable "lb_floating_ip" {
-  type = string
-}
-
-variable "master_vm_fixed_ip" {
-  type        = "string"
-  description = "Fixed IP for a master node to provide DNS to bootstrap during clustering."
 }

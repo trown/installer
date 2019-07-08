@@ -20,7 +20,6 @@ EOF
   }
 }
 
-# FIXME(mandre) stop hardcoding the number of master nodes
 data "ignition_file" "clustervars" {
   filesystem = "root"
   mode       = "420" // 0644
@@ -28,11 +27,8 @@ data "ignition_file" "clustervars" {
 
   content {
     content = <<EOF
-export FLOATING_IP=${var.lb_floating_ip}
+export API_VIP=${var.api_vip}
 export BOOTSTRAP_IP=${var.bootstrap_ip}
-export MASTER_FIXED_IPS_0=${var.master_ips[0]}
-export MASTER_FIXED_IPS_1=${var.master_ips[1]}
-export MASTER_FIXED_IPS_2=${var.master_ips[2]}
 EOF
   }
 }
@@ -48,7 +44,6 @@ data "ignition_config" "master_ignition_config" {
     element(data.ignition_file.hostname.*.id, count.index),
     data.ignition_file.clustervars.id,
   ]
-
 }
 
 resource "openstack_compute_instance_v2" "master_conf" {

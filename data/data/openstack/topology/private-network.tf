@@ -1,5 +1,7 @@
 locals {
   nodes_cidr_block = var.cidr_block
+  api_vip = cidrhost(local.nodes_cidr_block, 5)
+  # TODO(mandre) add VIP for DNS
 }
 
 
@@ -23,8 +25,18 @@ resource "openstack_networking_subnet_v2" "nodes" {
   ip_version      = 4
   network_id      = openstack_networking_network_v2.openshift-private.id
   tags            = ["openshiftClusterID=${var.cluster_id}"]
-  # FIXME(mandre) we'd better use keepalived on the master nodes
-  dns_nameservers = var.bootstrap_dns ? [] : [var.lb_floating_ip]
+  allocation_pool {
+    start = cidrhost(local.nodes_cidr_block, 10)
+    # FIXME(mandre) this should be the last available IP of the CIDR
+    end   = cidrhost(local.nodes_cidr_block, 50)
+  }
+  # FIXME(mandre) we need another VIP for DNS
+  dns_nameservers = var.bootstrap_dns ? [] : [local.api_vip]
+  # TODO(mandre) should we just set it to a VIP right now? If so, we don't need
+  # the bootstrap_dns var.
+  # I think we can't because the bootstrap node won't be able to get to swift
+  # in order to retrieve ignition file. This needs to be tested...
+  # dns_nameservers = [local.api_vip]
 }
 
 resource "openstack_networking_port_v2" "masters" {
@@ -74,7 +86,10 @@ resource "openstack_networking_port_v2" "bootstrap_port" {
 
 resource "openstack_networking_floatingip_associate_v2" "api_fip" {
   count       = length(var.lb_floating_ip) == 0 ? 0 : 1
-  port_id     = var.bootstrap_dns ? openstack_networking_port_v2.bootstrap_port.id : openstack_networking_port_v2.masters[0].id
+  # NOTE(mandre) Is this OK to not have HA for external access via the FIP?
+  # FIP must point to a master node, otherwise the installer won't know when
+  # bootstrap node has completed
+  port_id     = openstack_networking_port_v2.masters[0].id
   floating_ip = var.lb_floating_ip
 }
 

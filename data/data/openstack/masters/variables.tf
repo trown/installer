@@ -35,7 +35,7 @@ variable "user_data_ign" {
   type = string
 }
 
-variable "lb_floating_ip" {
+variable "api_vip" {
   type = string
 }
 

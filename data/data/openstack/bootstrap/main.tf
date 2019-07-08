@@ -20,11 +20,7 @@ data "ignition_config" "redirect" {
     data.ignition_file.hostname.id,
     data.ignition_file.dns_conf.id,
     data.ignition_file.dhcp_conf.id,
-    data.ignition_file.switch_api_endpoint.id,
-  ]
-
-  systemd = [
-    data.ignition_systemd_unit.switch_api_endpoint.id,
+    data.ignition_file.hosts.id,
   ]
 }
 
@@ -46,12 +42,16 @@ data "ignition_file" "dns_conf" {
   mode = "420"
   path = "/etc/dhcp/dhclient.conf"
 
+  # FIXME(mandre) this should really be a VIP for the DNS
+  # Also this will likely cause delay with bootstrap node networking until the
+  # master come up and are able to serve DNS queries.
+  # Not sure the bootstrap is trying to resolve anything it doesn't have in its
+  # hosts file...
   content {
     content = <<EOF
 send dhcp-client-identifier = hardware;
-prepend domain-name-servers ${var.master_vm_fixed_ip};
+prepend domain-name-servers ${var.api_vip};
 EOF
-
   }
 }
 
@@ -64,61 +64,22 @@ data "ignition_file" "hostname" {
     content = <<EOF
 bootstrap
 EOF
-
   }
 }
 
-data "ignition_file" "switch_api_endpoint" {
+data "ignition_file" "hosts" {
   filesystem = "root"
-  mode       = "493" // 0755
-  path       = "/usr/local/bin/switch-api-endpoint.sh"
+  mode       = "420" // 0644
+  path       = "/etc/hosts"
 
   content {
     content = <<EOF
-#!/usr/bin/env bash
-
-set -eu
-
-wait_for_existence() {
-	while [ ! -e "$${1}" ]
-	do
-		sleep 5
-	done
-}
-
-echo "Waiting for bootstrap to complete..."
-wait_for_existence /opt/openshift/.bootkube.done
-wait_for_existence /opt/openshift/.openshift.done
-
-echo "Switching bootstrap's API address to a master node"
-echo "${var.master_vm_fixed_ip} api-int.${var.cluster_domain} api.${var.cluster_domain}" >> /etc/hosts
+127.0.0.1   localhost localhost.localdomain localhost4 localhost4.localdomain4
+::1         localhost localhost.localdomain localhost6 localhost6.localdomain6
+${var.api_vip} api-int.${var.cluster_domain} api.${var.cluster_domain}
 EOF
-
   }
 }
-
-data "ignition_systemd_unit" "switch_api_endpoint" {
-  name    = "switch-api-endpoint.service"
-  enabled = true
-
-  content = <<EOF
-[Unit]
-Description=Switch the bootstrap API to a master node. This will enable `progress.service` to send the boostrap-complete event.
-# Workaround for https://github.com/systemd/systemd/issues/1312
-Wants=bootkube.service openshift.service
-After=bootkube.service openshift.service
-
-[Service]
-ExecStart=/usr/local/bin/switch-api-endpoint.sh
-
-Restart=on-failure
-RestartSec=5s
-
-[Install]
-WantedBy=multi-user.target
-EOF
-}
-
 
 data "openstack_images_image_v2" "bootstrap_image" {
   name = var.image_name
@@ -130,9 +91,9 @@ data "openstack_compute_flavor_v2" "bootstrap_flavor" {
 }
 
 resource "openstack_compute_instance_v2" "bootstrap" {
-  name = "${var.cluster_id}-bootstrap"
+  name      = "${var.cluster_id}-bootstrap"
   flavor_id = data.openstack_compute_flavor_v2.bootstrap_flavor.id
-  image_id = data.openstack_images_image_v2.bootstrap_image.id
+  image_id  = data.openstack_images_image_v2.bootstrap_image.id
 
   user_data = data.ignition_config.redirect.rendered
 
@@ -146,4 +107,3 @@ resource "openstack_compute_instance_v2" "bootstrap" {
     openshiftClusterID = var.cluster_id
   }
 }
-

@@ -32,9 +32,7 @@ module "bootstrap" {
   flavor_name        = var.openstack_master_flavor_name
   ignition           = var.ignition_bootstrap
   bootstrap_port_id  = module.topology.bootstrap_port_id
-  lb_floating_ip     = var.openstack_lb_floating_ip
-  master_vm_fixed_ip = module.topology.master_ips[0]
-  bootstrap_ip       = module.topology.bootstrap_port_ip
+  api_vip            = module.topology.api_vip
 }
 
 module "masters" {
@@ -53,7 +51,7 @@ module "masters" {
   user_data_ign     = var.ignition_master
   master_ips        = module.topology.master_ips
   bootstrap_ip      = module.topology.bootstrap_port_ip
-  lb_floating_ip     = var.openstack_lb_floating_ip
+  api_vip           = module.topology.api_vip
 }
 
 module "topology" {

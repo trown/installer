@@ -1,3 +1,7 @@
+output "api_vip" {
+  value = local.api_vip
+}
+
 output "bootstrap_port_id" {
   value = openstack_networking_port_v2.bootstrap_port.id
 }
