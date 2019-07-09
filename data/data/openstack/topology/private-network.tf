@@ -56,6 +56,10 @@ resource "openstack_networking_port_v2" "masters" {
   fixed_ip {
     subnet_id = openstack_networking_subnet_v2.nodes.id
   }
+
+  allowed_address_pairs {
+    ip_address = local.api_vip
+  }
 }
 
 resource "openstack_networking_trunk_v2" "masters" {
@@ -81,6 +85,10 @@ resource "openstack_networking_port_v2" "bootstrap_port" {
 
   fixed_ip {
     subnet_id = openstack_networking_subnet_v2.nodes.id
+  }
+
+  allowed_address_pairs {
+    ip_address = local.api_vip
   }
 }
 

@@ -262,3 +262,10 @@ resource "openstack_networking_secgroup_rule_v2" "master_ingress_services" {
   security_group_id = openstack_networking_secgroup_v2.master.id
 }
 
+resource "openstack_networking_secgroup_rule_v2" "master_ingress_vrrp" {
+  direction         = "ingress"
+  ethertype         = "IPv4"
+  protocol          = 112
+  security_group_id = openstack_networking_secgroup_v2.master.id
+}
+
