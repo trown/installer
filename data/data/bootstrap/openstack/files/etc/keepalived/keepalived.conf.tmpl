@@ -1,4 +1,14 @@
-vrrp_instance API {
+vrrp_script chk_ocp {
+    # NOTE(mandre) the fake kube-api server doesn't responds to the
+    # https://0:6443/readyz URL, we need to find another check
+    script "ss -tnl | grep 6443"
+    interval 1
+    weight 50
+}
+
+# FIXME(mandre) Why isn't the VIP moving to the master nodes once the fake
+# kube-api server goes down?
+vrrp_instance ${CLUSTER_NAME}_API {
     state BACKUP
     interface ${INTERFACE}
     virtual_router_id ${API_VRID}
@@ -6,9 +16,28 @@ vrrp_instance API {
     advert_int 1
     authentication {
         auth_type PASS
-        auth_pass cluster_uuid_api_vip
+        auth_pass ${CLUSTER_NAME}_api_vip
     }
     virtual_ipaddress {
         ${API_VIP}/${NET_MASK}
     }
+    track_script {
+        chk_ocp
+    }
 }
+
+# NOTE(mandre) we we really need to run coredns on the bootstrap node?
+# vrrp_instance ${CLUSTER_NAME}_DNS {
+#     state MASTER
+#     interface ${INTERFACE}
+#     virtual_router_id ${DNS_VRID}
+#     priority 140
+#     advert_int 1
+#     authentication {
+#         auth_type PASS
+#         auth_pass ${CLUSTER_NAME}_dns_vip
+#     }
+#     virtual_ipaddress {
+#         ${DNS_VIP}/${NET_MASK}
+#     }
+# }

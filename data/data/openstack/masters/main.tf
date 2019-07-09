@@ -28,6 +28,7 @@ data "ignition_file" "clustervars" {
   content {
     content = <<EOF
 export API_VIP=${var.api_vip}
+export DNS_VIP=${var.dns_vip}
 export BOOTSTRAP_IP=${var.bootstrap_ip}
 EOF
   }

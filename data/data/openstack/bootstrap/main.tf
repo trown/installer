@@ -42,15 +42,15 @@ data "ignition_file" "dns_conf" {
   mode = "420"
   path = "/etc/dhcp/dhclient.conf"
 
-  # FIXME(mandre) this should really be a VIP for the DNS
-  # Also this will likely cause delay with bootstrap node networking until the
-  # master come up and are able to serve DNS queries.
-  # Not sure the bootstrap is trying to resolve anything it doesn't have in its
-  # hosts file...
+  # FIXME(mandre) this will likely cause delay with bootstrap node networking
+  # until the master come up and are able to serve DNS queries.  Not sure the
+  # bootstrap is trying to resolve anything it doesn't have in its hosts
+  # file...
+  # KNI solved this by running coredns on the bootstrap node
   content {
     content = <<EOF
 send dhcp-client-identifier = hardware;
-prepend domain-name-servers ${var.api_vip};
+prepend domain-name-servers ${var.dns_vip};
 EOF
   }
 }

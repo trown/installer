@@ -36,3 +36,7 @@ variable "bootstrap_port_id" {
 variable "api_vip" {
   type = string
 }
+
+variable "dns_vip" {
+  type = string
+}

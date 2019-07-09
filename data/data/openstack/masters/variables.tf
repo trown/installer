@@ -39,6 +39,10 @@ variable "api_vip" {
   type = string
 }
 
+variable "dns_vip" {
+  type = string
+}
+
 variable "master_ips" {
   type = list(string)
 }

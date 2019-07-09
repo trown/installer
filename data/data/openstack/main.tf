@@ -33,6 +33,7 @@ module "bootstrap" {
   ignition           = var.ignition_bootstrap
   bootstrap_port_id  = module.topology.bootstrap_port_id
   api_vip            = module.topology.api_vip
+  dns_vip            = module.topology.dns_vip
 }
 
 module "masters" {
@@ -52,6 +53,7 @@ module "masters" {
   master_ips        = module.topology.master_ips
   bootstrap_ip      = module.topology.bootstrap_port_ip
   api_vip           = module.topology.api_vip
+  dns_vip           = module.topology.dns_vip
 }
 
 module "topology" {

@@ -1,7 +1,8 @@
 locals {
   nodes_cidr_block = var.cidr_block
   api_vip = cidrhost(local.nodes_cidr_block, 5)
-  # TODO(mandre) add VIP for DNS
+  dns_vip = cidrhost(local.nodes_cidr_block, 6)
+  # TODO(mandre) add VIP for ingress
 }
 
 
@@ -30,14 +31,28 @@ resource "openstack_networking_subnet_v2" "nodes" {
     # FIXME(mandre) this should be the last available IP of the CIDR
     end   = cidrhost(local.nodes_cidr_block, 50)
   }
-  # FIXME(mandre) we need another VIP for DNS
-  dns_nameservers = var.bootstrap_dns ? [] : [local.api_vip]
+  dns_nameservers = var.bootstrap_dns ? [] : [local.dns_vip]
   # TODO(mandre) should we just set it to a VIP right now? If so, we don't need
   # the bootstrap_dns var.
   # I think we can't because the bootstrap node won't be able to get to swift
   # in order to retrieve ignition file. This needs to be tested...
-  # dns_nameservers = [local.api_vip]
+  # We're setting the bootstrap DNS to the DNS VIP via the ignition file anyway
+  # We could consider serve the bootstrap ignition via IP, but meh...
 }
+
+# TODO(mandre) Do we need to create a port for the VIP?
+# resource "openstack_networking_port_v2" "api_vip" {
+#   name  = "${var.cluster_id}-api-vip-port"
+#   admin_state_up     = "true"
+#   network_id         = openstack_networking_network_v2.openshift-private.id
+#   security_group_ids = [openstack_networking_secgroup_v2.master.id]
+#   tags               = ["openshiftClusterID=${var.cluster_id}"]
+
+#   fixed_ip {
+#     subnet_id = openstack_networking_subnet_v2.nodes.id
+#     ip_address = local.api_vip
+#   }
+# }
 
 resource "openstack_networking_port_v2" "masters" {
   name  = "${var.cluster_id}-master-port-${count.index}"
@@ -59,6 +74,9 @@ resource "openstack_networking_port_v2" "masters" {
 
   allowed_address_pairs {
     ip_address = local.api_vip
+  }
+  allowed_address_pairs {
+    ip_address = local.dns_vip
   }
 }
 
