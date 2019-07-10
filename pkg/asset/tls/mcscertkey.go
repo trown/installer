@@ -43,7 +43,7 @@ func (a *MCSCertKey) Generate(dependencies asset.Parents) error {
 
 	if installConfig.Config.OpenStack != nil {
 		// FIXME(mandre) get that from Config somehow
-		ip_address := "10.0.128.5"
+		ip_address := "10.0.0.5"
 		cfg.IPAddresses = []net.IP{net.ParseIP(ip_address)}
 		cfg.DNSNames = append(cfg.DNSNames, ip_address)
 	}

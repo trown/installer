@@ -13,7 +13,7 @@ import (
 func ignitionURL(installConfig *types.InstallConfig) string {
 	switch {
 	case installConfig.OpenStack != nil:
-		ip_address := "10.0.128.5"
+		ip_address := "10.0.0.5"
 		return fmt.Sprintf("%s:22623", ip_address)
 	default:
 		return fmt.Sprintf("api-int.%s:22623", installConfig.ClusterDomain())
